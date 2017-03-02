@@ -11,6 +11,12 @@
 #import "UIImage+FixOrientation.h"
 #import "LLSimpleCamera+Helper.h"
 
+#ifdef LLSIMPLECAMERA_DISABLE_MICROPHONE_SUPPORT
+#define LLSIMPLECAMERA_MICROPHONE_ENABLED 0
+#else
+#define LLSIMPLECAMERA_MICROPHONE_ENABLED 1
+#endif
+
 @interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate, UIGestureRecognizerDelegate>
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
@@ -81,6 +87,11 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _recording = NO;
     _zoomingEnabled = YES;
     _effectiveScale = 1.0f;
+    
+#if LLSIMPLECAMERA_MICROPHONE_ENABLED
+#else
+    NSAssert(videoEnabled == NO, @"Video cannot be enabled when LLSimpleCamera is built with video disabled");
+#endif
 }
 
 - (void)viewDidLoad
@@ -854,6 +865,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 + (void)requestMicrophonePermission:(void (^)(BOOL granted))completionBlock
 {
+#if LLSIMPLECAMERA_MICROPHONE_ENABLED
     if([[AVAudioSession sharedInstance] respondsToSelector:@selector(requestRecordPermission:)]) {
         [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
             // return to main thread
@@ -864,6 +876,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             });
         }];
     }
+#endif
 }
 
 + (BOOL)isFrontCameraAvailable
